@@ -1,0 +1,31 @@
+#!/bin/bash
+
+based=$(dirname $0)/..
+pname=$(basename $0)
+stime=$(date +%Y%m%d%H%M%S%Z)
+
+msg(){
+    echo "$pname $stime $(date +%Y%m%d%H%M%S%Z) $@"	>&2
+}
+
+tmp=/tmp/$pname.$stime.$$
+if ! mkdir $tmp ; then
+    msg ERROR can not make temporally directory.
+    exit 1
+fi
+trap 'rm -rf $tmp' EXIT
+################################################################
+dot_sshd=$based/dot_ssh
+
+mkdir -p $dot_sshd
+chmod 700 $dot_sshd
+
+server_addr=$($based/sh/terraform output ec2-addr;)
+
+ssh	-o "UserKnownHostsFile $dot_sshd/known_hosts"	\
+	-i $dot_sshd/id_rsa	\
+	-L 8000:127.0.0.1:80	\
+	centos@$server_addr $@
+
+################################################################
+exit 0
