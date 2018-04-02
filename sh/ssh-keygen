@@ -1,0 +1,38 @@
+#!/bin/bash
+
+based=$(dirname $0)/..
+pname=$(basename $0)
+stime=$(date +%Y%m%d%H%M%S%Z)
+
+msg(){
+    echo "$pname $stime $(date +%Y%m%d%H%M%S%Z) $@"	>&2
+}
+
+tmp=/tmp/$pname.$stime.$$
+if ! mkdir $tmp ; then
+    msg ERROR can not make temporally directory.
+    exit 1
+fi
+trap 'rm -rf $tmp' EXIT
+################################################################
+comment="cnetos@web"
+
+dot_sshd=$based/dot_ssh
+
+mkdir -p $dot_sshd
+chmod 700 $dot_sshd
+
+# AWS keypair(Dame! AWS does not support ecdsa!)
+keyf="$dot_sshd/id_rsa"
+[ -s "$keyf" ]	||
+yes|ssh-keygen -t rsa -b $((4*1024))	-C "$comment"	\
+	       -f $keyf
+
+# Remote keypair
+keyf="$dot_sshd/id_ecdsa.remote"
+[ -s "$keyf" ]	||
+    yes|ssh-keygen -t ecdsa -b 521	-C "$comment"	\
+		   -f "$keyf"
+
+################################################################
+exit 0
