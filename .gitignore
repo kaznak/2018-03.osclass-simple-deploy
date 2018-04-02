@@ -19,5 +19,9 @@ nogit_*
 ### ** python
 *.pyc
 
+### ** terraform
+.terraform
+*.tfstate*
+
 ### * Project
 dot_ssh/
