@@ -1,0 +1,23 @@
+# -*- mode: gitignore; -*-
+
+### gitignore https://github.com/github/gitignore
+
+### * git
+### ** private files
+nogit_*
+*_nogit
+
+### * Editors
+### ** Emacs 
+*~
+\#*\#
+.\#*
+
+### ** Vi
+*.swp
+
+### ** python
+*.pyc
+
+### * Project
+dot_ssh/
