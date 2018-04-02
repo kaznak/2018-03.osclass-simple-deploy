@@ -1,0 +1,32 @@
+#!/bin/bash
+
+based=$(dirname $0)/..
+pname=$(basename $0)
+stime=$(date +%Y%m%d%H%M%S%Z)
+
+msg(){
+    echo "$pname $stime $(date +%Y%m%d%H%M%S%Z) $@"	>&2
+}
+
+tmp=/tmp/$pname.$stime.$$
+if ! mkdir $tmp ; then
+    msg ERROR can not make temporally directory.
+    exit 1
+fi
+trap 'rm -rf $tmp' EXIT
+################################################################
+file=${1:-"setup"}
+task=${2:-"setup"}
+################################################################
+
+ip_addr=$($based/sh/terraform output ec2-addr;)
+
+fab	-f $based/server-res/$file.py	\
+	-H $ip_addr	\
+	-i $based/dot_ssh/id_rsa	\
+	-u centos	\
+	--set IP_ADDR=$ip_addr	\
+	$task
+
+################################################################
+exit 0
