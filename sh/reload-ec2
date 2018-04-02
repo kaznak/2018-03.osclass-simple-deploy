@@ -1,0 +1,21 @@
+#!/bin/bash
+
+based=$(dirname $0)/..
+pname=$(basename $0)
+stime=$(date +%Y%m%d%H%M%S%Z)
+
+msg(){
+    echo "$pname $stime $(date +%Y%m%d%H%M%S%Z) $@"	>&2
+}
+
+tmp=/tmp/$pname.$stime.$$
+if ! mkdir $tmp ; then
+    msg ERROR can not make temporally directory.
+    exit 1
+fi
+trap 'rm -rf $tmp' EXIT
+################################################################
+echo yes|$based/sh/terraform destroy '-target=aws_instance.osclass'	&&
+    echo yes|$based/sh/terraform apply
+################################################################
+exit 0
