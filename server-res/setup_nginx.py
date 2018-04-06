@@ -31,7 +31,7 @@ IP_ADDR = env.IP_ADDR
 def setup():
     setup_repository()
     setup_selinux()
-    # update_system()
+    update_system()
     install_packages()
     install_osclass()
     setup_nginx()
@@ -71,19 +71,24 @@ def install_packages(): # install packages
             'git', 'screen', 'patch',
             # # debug
             'gdb', 'strace', 'lsof',
+            'tcpdump', 'bind-utils',
 
             # PHP related packages
             # # osclass require
             # # # install.php says
             'php', 'php-gd', 'php-mysqlnd',
-            # # # and other requirements
-            'php-mbstring', 'php-mcrypt',
-            'php-curl',
-            'php-ldap',
-            'php-zip', 'php-fileinfo',
-            'php-xml', 'php-xmlrpc',
+            # # osclass undocumented require
+            'php-mbstring',
+            # # # required?
+            # 'php-mcrypt',
+            # 'php-curl',
+            # 'php-ldap',
+            # 'php-zip', 'php-fileinfo',
+            # 'php-xml', 'php-xmlrpc',
+
             # # debug
             'php-cli',
+
             # Servers and DBs
             'nginx',
             'mariadb', 'mariadb-server',
