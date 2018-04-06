@@ -20,6 +20,7 @@ import cuisine
 cuisine.select_package('yum')
 
 IP_ADDR = env.IP_ADDR
+HTTP_DIGEST_AUTH = True
 
 '''
 + setup : total setup function
@@ -31,7 +32,7 @@ IP_ADDR = env.IP_ADDR
 def setup():
     setup_repository()
     setup_selinux()
-    # update_system()
+    update_system()
     install_packages()
     install_osclass()
     setup_apache()
@@ -70,21 +71,26 @@ def install_packages(): # install packages
             'git', 'screen', 'patch',
             # # debug
             'gdb', 'strace', 'lsof',
+            'tcpdump', 'bind-utils',
 
             # PHP related packages
             # # osclass require
-            # # # install.php says
             'php', 'php-gd', 'php-mysqlnd',
-            # # # and other requirements
-            'php-mbstring', 'php-mcrypt',
-            'php-curl',
-            'php-ldap',
-            'php-zip', 'php-fileinfo',
-            'php-xml', 'php-xmlrpc',
+            # # osclass undocumented require
+            'php-mbstring',
+            # # # required?
+            # 'php-mcrypt',
+            # 'php-curl',
+            # 'php-ldap',
+            # 'php-zip', 'php-fileinfo',
+            # 'php-xml', 'php-xmlrpc',
+
             # # debug
             'php-cli',
+
             # Servers and DBs
             'httpd',
+            'mod_ssl', # osclass require to send email.
             'mariadb', 'mariadb-server',
     ]:
         cuisine.package_ensure(pkg)
@@ -103,6 +109,35 @@ unzip /home/centos/osclass.3.7.4.zip -d /var/www/html/osclass
 
 def setup_apache():
     sudo("sed -i '/^[[:space:]]*DocumentRoot[[:space:]]/s%DocumentRoot.*$%DocumentRoot \"/var/www/html/osclass\"%' /etc/httpd/conf/httpd.conf")
+
+    sudo('rm -f /etc/httpd/osclass.htdigest')
+    sudo('rm -f /etc/httpd/conf.d/digest_auth.conf')
+    if HTTP_DIGEST_AUTH :
+        sudo('''
+expect -c '
+spawn htdigest -c /etc/httpd/osclass.htdigest osclass 6yuHcUGOh3
+expect "password:"
+send "E1p<I93C)1<X9U*Z\\n"
+expect "password:"
+send "E1p<I93C)1<X9U*Z\\n"
+interact
+'
+        '''.strip() )
+        sudo('''
+cat	<<"EOF"	> /etc/httpd/conf.d/digest_auth.conf
+<Location />
+       AuthName 'osclass'
+
+       AuthType Digest
+       AuthDigestDomain /
+       AuthDigestProvider file
+       AuthUserFile /etc/httpd/osclass.htdigest
+
+       Require valid-user
+</Location>
+EOF
+        '''.strip() )
+
     sudo('systemctl restart httpd')
     sudo('systemctl enable httpd')
 
@@ -136,7 +171,7 @@ expect "Reload privilege tables now?"
 send "y\\n"
 EOF
     '''.strip())
-    run('''
+    sudo('''
 expect	<<"EOF"
 spawn mysql --user=root --password=password
 expect ">"
